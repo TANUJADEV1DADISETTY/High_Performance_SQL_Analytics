@@ -1,0 +1,15 @@
+{
+  "Plan": {
+    "Node Type": "WindowAgg",
+    "Actual Total Time": 118.4,
+    "Plans": [
+      {
+        "Node Type": "Index Scan",
+        "Index Name": "idx_orders_user_created",
+        "Scan Direction": "Forward",
+        "Actual Total Time": 42.1,
+        "Shared Hit Blocks": 12450
+      }
+    ]
+  }
+}

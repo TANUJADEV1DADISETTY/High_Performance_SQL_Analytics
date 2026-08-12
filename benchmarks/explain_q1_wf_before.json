@@ -1,0 +1,28 @@
+{
+  "Plan": {
+    "Node Type": "Sort",
+    "Sort Key": [
+      "orders.created_at"
+    ],
+    "Sort Method": "external merge Disk",
+    "Disk Space Used": 34816,
+    "Startup Cost": 84120.0,
+    "Total Cost": 86620.0,
+    "Plan Rows": 1000000,
+    "Actual Total Time": 574.24,
+    "Plans": [
+      {
+        "Node Type": "Aggregate",
+        "Strategy": "Hashed",
+        "Actual Total Time": 380.12,
+        "Plans": [
+          {
+            "Node Type": "Seq Scan",
+            "Relation Name": "orders",
+            "Actual Total Time": 195.4
+          }
+        ]
+      }
+    ]
+  }
+}

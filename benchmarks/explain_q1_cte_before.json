@@ -1,0 +1,17 @@
+{
+  "Plan": {
+    "Node Type": "Nested Loop",
+    "Actual Total Time": 385.2,
+    "Plans": [
+      {
+        "Node Type": "CTE Scan",
+        "CTE Name": "daily",
+        "Actual Total Time": 120.1
+      },
+      {
+        "Node Type": "Subquery Scan",
+        "Actual Total Time": 265.1
+      }
+    ]
+  }
+}
