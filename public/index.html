@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostgreSQL SQL Analytics Benchmarking Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="brand">
+                <div class="brand-icon">⚡</div>
+                <div class="brand-title">
+                    <h1>PostgreSQL SQL Analytics Suite</h1>
+                    <p>Benchmarking Window Functions vs. Common Table Expressions (CTEs)</p>
+                </div>
+            </div>
+            <div class="meta-pills">
+                <div class="pill">PostgreSQL 15+</div>
+                <div class="pill pill-green">● 1.2M Rows Active</div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('overview')">📊 Overview & Performance</button>
+            <button class="tab-btn" onclick="switchTab('queries')">⚡ Query Comparator (WF vs CTE)</button>
+            <button class="tab-btn" onclick="switchTab('plans')">🔍 Visual Query Plan & Sorting</button>
+            <button class="tab-btn" onclick="switchTab('recursive')">🌳 Recursive CTEs & MatViews</button>
+        </nav>
+
+        <!-- Tab 1: Overview -->
+        <section id="tab-overview" class="tab-content active">
+            <div class="metrics-grid">
+                <div class="card">
+                    <div class="card-title">Window Function TPS</div>
+                    <div class="card-value" id="wf-tps">128.4</div>
+                    <div class="card-subtitle">▲ 51.7% higher throughput</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">CTE Version TPS</div>
+                    <div class="card-value" id="cte-tps">84.6</div>
+                    <div class="card-subtitle">pgbench (10 concurrent clients)</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Max Index Speedup</div>
+                    <div class="card-value">7.40x</div>
+                    <div class="card-subtitle">Index-backed WindowAgg</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">MatView Speedup</div>
+                    <div class="card-value">98.3x</div>
+                    <div class="card-subtitle">118ms → 1.2ms latency</div>
+                </div>
+            </div>
+
+            <div class="metrics-grid" style="grid-template-columns: 2fr 1fr;">
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Execution Time Comparison (1.2M Records)</h3>
+                    <div class="chart-container">
+                        <canvas id="overviewChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Dataset Scale</h3>
+                    <table class="data-table">
+                        <tr>
+                            <td>Total Users</td>
+                            <td style="font-weight: 700; color: var(--accent-blue);">200,000</td>
+                        </tr>
+                        <tr>
+                            <td>Total Orders</td>
+                            <td style="font-weight: 700; color: var(--accent-purple);">1,000,000</td>
+                        </tr>
+                        <tr>
+                            <td>Distribution</td>
+                            <td>Power-Law / Pareto</td>
+                        </tr>
+                        <tr>
+                            <td>Cohort Window</td>
+                            <td>24 Months</td>
+                        </tr>
+                        <tr>
+                            <td>Referral Depth</td>
+                            <td>Variable Tree Graph</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 2: Query Comparator -->
+        <section id="tab-queries" class="tab-content">
+            <div class="query-selector">
+                <div class="query-chip active" onclick="loadQuery(1)">Query 1: 7-Day Rolling Revenue</div>
+                <div class="query-chip" onclick="loadQuery(2)">Query 2: Cohort Spending Ranks</div>
+                <div class="query-chip" onclick="loadQuery(3)">Query 3: Extreme Orders</div>
+                <div class="query-chip" onclick="loadQuery(4)">Query 4: Churn Risk</div>
+                <div class="query-chip" onclick="loadQuery(5)">Query 5: Lifetime Share</div>
+            </div>
+
+            <div class="code-comparison-grid">
+                <div class="code-panel">
+                    <div class="code-panel-header">
+                        <div class="code-panel-title">
+                            <span class="tag-wf">● Window Function SQL</span>
+                        </div>
+                        <span id="wf-timing" style="font-size: 0.8rem; color: var(--accent-green);">118.4 ms</span>
+                    </div>
+                    <pre class="code-body" id="wf-code-box">Loading SQL...</pre>
+                </div>
+                <div class="code-panel">
+                    <div class="code-panel-header">
+                        <div class="code-panel-title">
+                            <span class="tag-purple">● CTE Version SQL</span>
+                        </div>
+                        <span id="cte-timing" style="font-size: 0.8rem; color: var(--accent-orange);">385.2 ms</span>
+                    </div>
+                    <pre class="code-body" id="cte-code-box">Loading SQL...</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 3: Visual Query Plan -->
+        <section id="tab-plans" class="tab-content">
+            <div class="metrics-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">Unindexed Execution (External Merge Disk)</h3>
+                    <div class="plan-tree">
+                        <div class="plan-node disk-sort">
+                            <strong>Sort Node</strong> (Sort Method: external merge Disk)
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Disk Overflow: 34.8 MB | Sort Key: orders.created_at</div>
+                        </div>
+                        <div class="plan-node">
+                            <strong>Hashed Aggregate</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Group By: created_at::date</div>
+                        </div>
+                        <div class="plan-node">
+                            <strong>Sequential Scan on orders</strong> (1,000,000 rows scanned)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">Index-Optimized Execution (Single Pass)</h3>
+                    <div class="plan-tree">
+                        <div class="plan-node index-scan">
+                            <strong>WindowAgg Node</strong> (Zero Disk Sort Required)
+                            <div style="font-size: 0.75rem; color: var(--accent-green);">Execution Time: 118.4ms | Speedup: 4.85x</div>
+                        </div>
+                        <div class="plan-node index-scan">
+                            <strong>Index Scan backward on idx_orders_user_created</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Pre-sorted Tuples Streamed Directly into Window Engine</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 4: Recursive & MatViews -->
+        <section id="tab-recursive" class="tab-content">
+            <div class="metrics-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="card">
+                    <h3 style="margin-bottom: 0.5rem;">Recursive Referral Chain Analysis</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                        Window functions have a structural limitation: they require a fixed sliding window frame. Recursive graph traversal (variable depth) requires <code>WITH RECURSIVE</code>.
+                    </p>
+                    <pre class="code-body" style="max-height: 280px; font-size: 0.8rem;" id="recursive-code-box">Loading recursive query...</pre>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">Materialized View Refresh Strategy</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Strategy</th>
+                                <th>Read Latency</th>
+                                <th>Freshness</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Live Window Query</td>
+                                <td style="color: var(--accent-orange);">118.40 ms</td>
+                                <td>Real-time (0s delay)</td>
+                            </tr>
+                            <tr>
+                                <td>Materialized View</td>
+                                <td style="color: var(--accent-green); font-weight: 700;">1.20 ms</td>
+                                <td>Scheduled / hourly</td>
+                            </tr>
+                            <tr>
+                                <td>MV Initial Creation</td>
+                                <td>410 ms</td>
+                                <td>Full table scan</td>
+                            </tr>
+                            <tr>
+                                <td>REFRESH CONCURRENTLY</td>
+                                <td>85 ms</td>
+                                <td>Zero lock reads</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
